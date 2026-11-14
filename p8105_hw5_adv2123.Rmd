@@ -202,7 +202,24 @@ sim_t_test = function(mu, n = 30, sigma = 5) {
 
 ### 3.2 Testing function
 
-
 ```{r}
 sim_t_test(mu = 0)
 ```
+
+### 3.3 Generate 5000 datasets from the model
+
+```{r}
+sim_results_df =
+  expand_grid(
+    true_mu = 0:6,
+    iter = 1:5000
+  ) |>
+  mutate(
+    est_df = map(true_mu, sim_t_test)
+  ) |>
+  unnest(est_df) |>
+  mutate(rejected = p_value < 0.05)
+```
+`
+
+
