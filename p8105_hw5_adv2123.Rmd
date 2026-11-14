@@ -104,34 +104,34 @@ The probability that at least two people share a birthday increases quickly and 
 ### 2.1: Import data
 
 ```{r, message = FALSE}
-study_df =
+study_df = 
   tibble(
     files = list.files("data/"),
     path = str_c("data/", files)
-  ) |>
-  mutate(data = map(path, read_csv)) |>
-  unnest()
-```
-
-### 2.2 Tidy the results
-
-```{r}
-study_df =
-  study_df |>
-  mutate(files = str_remove(files, ".csv")) |>
-  separate(files, into = c("arm", "subject_id"), sep = "_") |>
+  ) |> 
+  mutate(data = map(path, read_csv, show_col_types = FALSE)) |> 
+  unnest(data) |> 
+  mutate(files = str_remove(files, ".csv")) |> 
+  separate(files, into = c("arm", "subject_id"), sep = "_") |> 
   mutate(
-    arm = case_match(arm, "con" ~ "control","exp" ~ "experimental")
-  ) |>
+    arm = case_match(
+      arm, 
+      "con" ~ "control", 
+      "exp" ~ "experimental"
+    )
+  ) |> 
   pivot_longer(
     week_1:week_8,
     names_to = "week",
     names_prefix = "week_",
     values_to = "observation"
-  ) |>
-  mutate(week = as.numeric(week)) |>
+  ) |> 
+  mutate(week = as.numeric(week)) |> 
   select(arm, subject_id, week, observation)
 
 study_df
 ```
+
+
+
 
