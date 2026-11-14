@@ -28,6 +28,9 @@ scale_colour_discrete = scale_colour_viridis_d
 scale_fill_discrete = scale_fill_viridis_d
 ```
 
+```{r}
+set.seed(1236)
+```
 ## Problem 1.
 
 ### 1.1 Building birthday function
@@ -114,10 +117,9 @@ study_df =
   mutate(files = str_remove(files, ".csv")) |> 
   separate(files, into = c("arm", "subject_id"), sep = "_") |> 
   mutate(
-    arm = case_match(
-      arm, 
-      "con" ~ "control", 
-      "exp" ~ "experimental"
+    arm = case_when(
+      arm == "con" ~ "control", 
+      arm == "exp" ~ "experimental"
     )
   ) |> 
   pivot_longer(
@@ -138,10 +140,11 @@ The tidy dataset has `r nrow(study_df)` rows, with one row per subject per week 
 
 ```{r}
 study_df |>
-  ggplot(aes(x = week, y = observation, group = str_c(arm, subject_id), color = arm)) +
+  ggplot(aes(x = week, y = observation, 
+             group = str_c(arm, subject_id), color = arm)) +
   geom_line() +
   geom_point(alpha = .5) +
-  scale_color_viridis_d((end = 0.9)) +
+  scale_color_viridis_d(end = 0.9) +
   labs(
     title = "Observations on each subject over time",
     x = "Week",
@@ -237,7 +240,7 @@ power_df |>
   )
 ```
 
-Power increases as the effect size increases. When mu = 0, the null is true and it is rejected `r power_df |> filter(true_mu == 0) |> pull(power)` of the time, which is close to alpha = 0.05 as expected. Power is low for small effects (`r power_df |> filter(true_mu == 1) |> pull(power)` when mu = 1), increases quickly for moderate effects (`r power_df |> filter(true_mu == 3) |> pull(power)` when mu = 3), and is essentially 1 for large effects (`r power_df |> filter(true_mu == 6) |> pull(power)` when mu = 6). Because n and sigma are fixed, a larger true mean is further from the null value of 0, which makes the difference easier to detect and increases power. 
+Power increases as the effect size increases. When mu = 0, the null is true and it is rejected `r power_df |> filter(true_mu == 0) |> pull(power) |> round (2)` of the time, which is close to alpha = 0.05 as expected. Power is low for small effects (`r power_df |> filter(true_mu == 1) |> pull(power) |> round (2)` when mu = 1), increases quickly for moderate effects (`r power_df |> filter(true_mu == 3) |> pull(power) |> round (2)` when mu = 3), and is essentially 1 for large effects (`r power_df |> filter(true_mu == 6) |> pull(power) |> round (2)` when mu = 6). Because n and sigma are fixed, a larger true mean is further from the null value of 0, which makes the difference easier to detect and increases power. 
 
 ### Plot 4. Average estimate of mu by true value of mu
 
