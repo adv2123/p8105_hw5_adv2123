@@ -220,6 +220,25 @@ sim_results_df =
   unnest(est_df) |>
   mutate(rejected = p_value < 0.05)
 ```
-`
+
+###. 3.4 Plot 3: Proportion of times the null was rejected vs. true mean
 
 
+```{r}
+power_df =
+  sim_results_df |>
+  group_by(true_mu) |>
+  summarize(power = mean(rejected))
+
+power_df |>
+  ggplot(aes(x = true_mu, y = power)) +
+  geom_point() +
+  geom_line() +
+  labs(
+    title = "Power of the one-sample t-test by true mean",
+    x = "True value of mu",
+    y = "Proportion of times the null was rejected"
+  )
+```
+
+Power increases as the effect size increases. When mu = 0, the null is true and it is rejected `r power_df |> filter(true_mu == 0) |> pull(power)` of the time, which is close to alpha = 0.05 as expected. Power is low for small effects (`r power_df |> filter(true_mu == 1) |> pull(power)` when mu = 1), increases quickly for moderate effects (`r power_df |> filter(true_mu == 3) |> pull(power)` when mu = 3), and is essentially 1 for large effects (`r power_df |> filter(true_mu == 6) |> pull(power)` when mu = 6). Because n and sigma are fixed, a larger true mean is further from the null value of 0, which makes the difference easier to detect and increases power. 
