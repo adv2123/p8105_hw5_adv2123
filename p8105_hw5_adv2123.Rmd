@@ -64,3 +64,39 @@ birthday_results_df =
   group_by(number_of_people) |>
   summarize(prob_of_repeat = mean(repeated))
 ```
+
+### Plot 1: Probability of a shared birthday as a function of group size.
+
+```{r}
+birthday_results_df |>
+  ggplot(aes(x = number_of_people, y = prob_of_repeat)) +
+  geom_point() +
+  geom_line() +
+  labs(
+    title = "Probability that at least two people share a birthday",
+    x = "Group size",
+    y = "Probability of a shared birthday"
+  )
+```
+
+```{r}
+first_over_half =
+  birthday_results_df |>
+  filter(prob_of_repeat > 0.5) |>
+  pull(number_of_people) |>
+  min()
+
+prob_23 =
+  birthday_results_df |>
+  filter(number_of_people == 23) |>
+  pull(prob_of_repeat)
+
+prob_50 =
+  birthday_results_df |>
+  filter(number_of_people == 50) |>
+  pull(prob_of_repeat)
+```
+
+The probability that at least two people share a birthday increases quickly and non-linearly with group size. It is close to 0 for very small groups, but by around group size of `r first_over_half` it goes above 50% (estimated mean = `r round(prob_23, 3)`). By a group size of 50, the estimated probability is `r round(prob_50, 3)`, so a shared birthday is almost certain. This is much higher than most people would guess, because the number of possible pairs of people grows much faster than the number of people.
+
+
