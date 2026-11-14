@@ -134,7 +134,7 @@ study_df
 
 The tidy dataset has `r nrow(study_df)` rows, with one row per subject per week (8 weeks total), and `r n_distinct(str_c(study_df$arm, study_df$subject_id))` subjects in total -- 10 subjects per arm. 
 
-### 2.2 Spaghetti plot
+### Plot 2: Spaghetti plot
 
 ```{r}
 study_df |>
@@ -148,10 +148,7 @@ study_df |>
     y = "Observation",
     color = "Arm"
   )
-```
 
-
-```{r}
 arm_means_df = 
   study_df |> 
   filter(week %in% c(1, 8)) |> 
@@ -221,8 +218,7 @@ sim_results_df =
   mutate(rejected = p_value < 0.05)
 ```
 
-###. 3.4 Plot 3: Proportion of times the null was rejected vs. true mean
-
+### Plot 3: Proportion of times the null was rejected vs. true mean
 
 ```{r}
 power_df =
@@ -242,3 +238,36 @@ power_df |>
 ```
 
 Power increases as the effect size increases. When mu = 0, the null is true and it is rejected `r power_df |> filter(true_mu == 0) |> pull(power)` of the time, which is close to alpha = 0.05 as expected. Power is low for small effects (`r power_df |> filter(true_mu == 1) |> pull(power)` when mu = 1), increases quickly for moderate effects (`r power_df |> filter(true_mu == 3) |> pull(power)` when mu = 3), and is essentially 1 for large effects (`r power_df |> filter(true_mu == 6) |> pull(power)` when mu = 6). Because n and sigma are fixed, a larger true mean is further from the null value of 0, which makes the difference easier to detect and increases power. 
+
+### Plot 4. Average estimate of mu by true value of mu
+
+```{r}
+all_est_df = 
+  sim_results_df |> 
+  group_by(true_mu) |> 
+  summarize(avg_mu_hat = mean(mu_hat)) |> 
+  mutate(samples = "All samples")
+
+rejected_est_df = 
+  sim_results_df |> 
+  filter(rejected) |> 
+  group_by(true_mu) |> 
+  summarize(avg_mu_hat = mean(mu_hat)) |> 
+  mutate(samples = "Only samples where null was rejected")
+
+avg_est_df = 
+  bind_rows(all_est_df, rejected_est_df)
+
+avg_est_df |> 
+  ggplot(aes(x = true_mu, y = avg_mu_hat, color = samples)) + 
+  geom_point() + 
+  geom_line() + 
+  labs(
+    title = "Average estimate of mu by true value of mu",
+    x = "True value of mu",
+    y = "Average estimate of mu",
+    color = ""
+  )
+```
+
+Across all samples, the average estimate of mu is approximately equal to the true mu (e.g., `r all_est_df |> filter(true_mu == 3) |> pull(avg_mu_hat) |> round(2)` when mu = 3). Among samples where the null was rejected, the average estimate overestimates the true mu when the effect size is small (e.g., `r rejected_est_df |> filter(true_mu == 1) |> pull(avg_mu_hat) |> round(2)` when mu = 1). When power is low, only samples with estimates far from 0 lead to rejection, meaning that significant findings are systematically biased away from the null. As mu increases, power approaches 1, so nearly all samples are rejected, and the average estimate gets close to the true value (e.g., `r rejected_est_df |> filter(true_mu == 6) |> pull(avg_mu_hat) |> round(2)` when mu = 6).
