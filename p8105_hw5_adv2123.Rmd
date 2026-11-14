@@ -99,4 +99,39 @@ prob_50 =
 
 The probability that at least two people share a birthday increases quickly and non-linearly with group size. It is close to 0 for very small groups, but by around group size of `r first_over_half` it goes above 50% (estimated mean = `r round(prob_23, 3)`). By a group size of 50, the estimated probability is `r round(prob_50, 3)`, so a shared birthday is almost certain. This is much higher than most people would guess, because the number of possible pairs of people grows much faster than the number of people.
 
+## Problem 2
+
+### 2.1: Import data
+
+```{r, message = FALSE}
+study_df =
+  tibble(
+    files = list.files("data/"),
+    path = str_c("data/", files)
+  ) |>
+  mutate(data = map(path, read_csv)) |>
+  unnest()
+```
+
+### 2.2 Tidy the results
+
+```{r}
+study_df =
+  study_df |>
+  mutate(files = str_remove(files, ".csv")) |>
+  separate(files, into = c("arm", "subject_id"), sep = "_") |>
+  mutate(
+    arm = case_match(arm, "con" ~ "control","exp" ~ "experimental")
+  ) |>
+  pivot_longer(
+    week_1:week_8,
+    names_to = "week",
+    names_prefix = "week_",
+    values_to = "observation"
+  ) |>
+  mutate(week = as.numeric(week)) |>
+  select(arm, subject_id, week, observation)
+
+study_df
+```
 
