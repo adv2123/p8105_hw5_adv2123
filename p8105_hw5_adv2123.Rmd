@@ -132,6 +132,51 @@ study_df =
 study_df
 ```
 
+The tidy dataset has `r nrow(study_df)` rows, with one row per subject per week (8 weeks total), and `r n_distinct(str_c(study_df$arm, study_df$subject_id))` subjects in total -- 10 subjects per arm. 
+
+### 2.2 Spaghetti plot
+
+```{r}
+study_df |>
+  ggplot(aes(x = week, y = observation, group = str_c(arm, subject_id), color = arm)) +
+  geom_line() +
+  geom_point(alpha = .5) +
+  scale_color_viridis_d((end = 0.9)) +
+  labs(
+    title = "Observations on each subject over time",
+    x = "Week",
+    y = "Observation",
+    color = "Arm"
+  )
+```
 
 
+```{r}
+arm_means_df = 
+  study_df |> 
+  filter(week %in% c(1, 8)) |> 
+  group_by(arm, week) |> 
+  summarize(mean_obs = mean(observation), .groups = "drop")
 
+con_wk1 = arm_means_df |> 
+  filter(arm == "control", week == 1) |>
+  pull(mean_obs)
+
+con_wk8 = arm_means_df |> 
+  filter(arm == "control", week == 8) |> 
+  pull(mean_obs)
+
+exp_wk1 = arm_means_df |> 
+  filter(arm == "experimental", week == 1) |> 
+  pull(mean_obs)
+
+exp_wk8 = arm_means_df |> 
+  filter(arm == "experimental", week == 8) |> 
+  pull(mean_obs)
+```
+
+At week 1, the two arms look similar, with a mean observation of 
+`r round(con_wk1, 2)` in the control arm and `r round(exp_wk1, 2)` in the 
+experimental arm. Over the 8 weeks, observations in the control arm stay roughly flat until it slightly decreases towards week 8 (mean = `r round(con_wk8, 2)`). In contrast, observations in the experimental arm increase steadily over time, reaching a mean of `r round(exp_wk8, 2)` at week 8. By the end of the study, nearly all experimental subjects have higher values than control subjects. There is also substantial week-to-week variability within subjects in both arms. 
+
+It is important to note that some observations are negative, mostly in the control arm. However, since the homework does not describe what is being measured, these values were kept as recorded.
